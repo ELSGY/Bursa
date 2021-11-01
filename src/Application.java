@@ -1,3 +1,7 @@
+import models.Client;
+import models.Offers;
+import models.Requests;
+import models.Seller;
 import models.Stocks;
 import utils.DatabaseConnection;
 
@@ -11,52 +15,126 @@ import java.util.logging.Logger;
 
 public class Application {
 
+	// Logger
 	private final static Logger LOG = Logger.getLogger(Application.class.getName());
+	// Lists
+	private List<Client> listClients = new ArrayList<>();
+	private List<Seller> listSellers = new ArrayList<>();
+	private List<Stocks> listStocks = new ArrayList<>();
+	private List<Offers> listOffers = new ArrayList<>();
+	private List<Requests> listRequests = new ArrayList<>();
+	// DB
+	Connection con = null;
 
-	public int getRandomInteger(int maximum, int minimum) {
+	public int getRandomInteger(int minimum, int maximum) {
 		return ((int) (Math.random() * (maximum - minimum))) + minimum;
 	}
 
-	public void initDatabase() throws SQLException {
+	public void initClients() {
 
-		// setup connection
-		Connection con = new DatabaseConnection().connect();
+		// standard personal: intre 5 - 10 clienti
+		int nrClient = getRandomInteger(5, 10);
 
-		// models
-		List<Stocks> stockList = new ArrayList<>();
+		for (int c = 1; c <= nrClient; c++) {
+			listClients.add(new Client(c));
+		}
+		System.out.println(listClients.toString());
 
+		//TODO introducere in baza de date
+	}
 
-		// inserare bd
+	public void initSellers() throws SQLException {
 
-
-
-		// preluare date
-		final String getAllSellers = "select * from actiune";
+		final String getAllSellers = "select * from vanzator";
 
 		Statement stmt = con.createStatement();
 		ResultSet result = stmt.executeQuery(getAllSellers);
 
 		while (result.next()) {
-			int id = result.getInt("id_actiune");
-			String name = result.getString("denumire");
-			double pret = result.getDouble("pret");
+			int id_vanzator = result.getInt("id_vanzator");
+			String nume = result.getString("nume");
 
-			stockList.add(new Stocks(id, name, pret));
+			listSellers.add(new Seller(id_vanzator, nume));
 		}
 
-		System.out.println(stockList.get(0));
-		stockList.get(0).setPret(300);
+		System.out.println(listSellers.toString());
+	}
 
-		String update = "update actiune\n" +
-						"set pret =" + 600 + "\n" +
-						"where id_actiune =" + stockList.get(0).getId() + ";";
+	public void initStocks() throws SQLException {
 
-		stmt.executeUpdate(update);
+		final String getAllStocks = "select * from actiune";
 
-		System.out.println(stockList.toString());
+		Statement stmt = con.createStatement();
+		ResultSet result = stmt.executeQuery(getAllStocks);
 
-//		int nr = getRandomInteger(1, 10);
-//		System.out.println(nr);
+		while (result.next()) {
+			int id_actiune = result.getInt("id_actiune");
+			String denumire = result.getString("denumire");
+			int pret = result.getInt("pret");
+
+			listStocks.add(new Stocks(id_actiune, denumire, pret));
+		}
+
+		System.out.println(listStocks.toString());
 
 	}
+
+	public void initOffers() {
+
+		// nr clienti in bd
+		int nrClients = listClients.size();
+		// nr actiuni in bd
+		int nrStocks = listStocks.size();
+
+		for (int client = 1; client <= nrClients; client++) { // pentru fiecare client
+
+			int nrOffers = getRandomInteger(1, nrStocks); // un numar random de oferte, dar nu mai multe decat numarul total de actiuni diferite
+
+			for (int offer = 1; offer <= nrOffers; offer++) {// pentru fiecare oferta
+				int offerStock = getRandomInteger(1, nrStocks);// actiunea
+				int nrStocksPerOffer = getRandomInteger(1, 5);// numarul de actiuni
+
+				listOffers.add(new Offers(client, offerStock, nrStocksPerOffer));
+			}
+		}
+		System.out.println(listOffers.toString());
+
+		//TODO introducere in baza de date
+	}
+
+	public void initRequests() {
+		//TODO implementare plus introducere in baza de date
+	}
+
+	public void clearLists() {
+		listClients.clear();
+		listSellers.clear();
+		listStocks.clear();
+	}
+
+	public void clearDBTables() {
+		//TODO clear db tables
+	}
+
+	public void initDatabase() throws SQLException {
+
+		// setup connection
+		con = new DatabaseConnection().connect();
+
+		// init lists
+		initClients();
+		initSellers();
+		initStocks();
+		initOffers();
+		// TODO requests - trebuie sa va legati de lista de vanzatori, lista actiuni
+		// TODO tranzactions - asta nu se initializeaza, se pun date in ea in startSimulation(), cand se fac calculele
+		// TODO functie startSimulation() - aici e concurenta
+		// TODO System.out.println() la toate listele
+		// TODO facut meniu cu switch() in terminal
+
+		// clear all
+		clearLists();
+		clearDBTables();
+	}
+
 }
