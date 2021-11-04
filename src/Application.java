@@ -5,10 +5,7 @@ import models.Seller;
 import models.Stocks;
 import utils.DatabaseConnection;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -30,7 +27,7 @@ public class Application {
 		return ((int) (Math.random() * (maximum - minimum))) + minimum;
 	}
 
-	public void initClients() {
+	public void initClients() throws SQLException {
 
 		// standard personal: intre 5 - 10 clienti
 		int nrClient = getRandomInteger(5, 10);
@@ -40,7 +37,14 @@ public class Application {
 		}
 		System.out.println(listClients.toString());
 
+
 		//TODO introducere in baza de date
+		for (Client client: listClients) {
+			String insertClient = "INSERT INTO client (id_client) VALUES ("+ client.getId_client()+")";
+			System.out.println(client.getId_client());
+			Statement stmt = con.createStatement();
+			stmt.executeUpdate(insertClient);
+		}
 	}
 
 	public void initSellers() throws SQLException {
@@ -79,27 +83,39 @@ public class Application {
 
 	}
 
-	public void initOffers() {
+	public void initOffers() throws SQLException {
 
 		// nr clienti in bd
 		int nrClients = listClients.size();
 		// nr actiuni in bd
 		int nrStocks = listStocks.size();
 
-		for (int client = 1; client <= nrClients; client++) { // pentru fiecare client
+		for (int client = 1; client <= nrClients; client++) { //pentru fiecare client
 
-			int nrOffers = getRandomInteger(1, nrStocks); // un numar random de oferte, dar nu mai multe decat numarul total de actiuni diferite
+			int nrOffers = getRandomInteger(1, nrStocks); //un numar random de oferte, dar nu mai multe decat numarul total de actiuni diferite
 
 			for (int offer = 1; offer <= nrOffers; offer++) {// pentru fiecare oferta
 				int offerStock = getRandomInteger(1, nrStocks);// actiunea
 				int nrStocksPerOffer = getRandomInteger(1, 5);// numarul de actiuni
 
 				listOffers.add(new Offers(client, offerStock, nrStocksPerOffer));
+
+
 			}
 		}
 		System.out.println(listOffers.toString());
+		for (Offers offer: listOffers) {
+			String insertOffers = "INSERT INTO oferte (id_vanzator, id_actiune, nr_actiuni) VALUES ("+ offer.getId_vanzator()+", "+offer.getId_actiune() +", "+offer.getNr_actiuni()+")";
+			Statement stmt = con.createStatement();
+			stmt.executeUpdate(insertOffers);
+		}
 
-		//TODO introducere in baza de date
+
+
+		//TODO introducere in baza de date => rezolvat
+
+
+
 	}
 
 	public void initRequests() {
@@ -112,8 +128,27 @@ public class Application {
 		listStocks.clear();
 	}
 
-	public void clearDBTables() {
-		//TODO clear db tables
+	public void clearDBTables() throws SQLException {
+		//TODO clear db tables => rezolvat
+		final String deleteClientData = "delete from client";
+		final String deleteActiuneData = "delete from actiune";
+		final String deleteCerereData = "delete from cerere";
+		final String deleteOferteData = "delete from oferte";
+		final String deleteTranzactiiData = "delete from tranzactii";
+		//final String deleteVanzatorData = "delete from vanzator";
+
+
+
+		PreparedStatement deleteClient = con.prepareStatement(deleteClientData);
+		PreparedStatement deleteActiune = con.prepareStatement(deleteActiuneData);
+		PreparedStatement deleteCerere = con.prepareStatement(deleteCerereData);
+		PreparedStatement deleteOferte = con.prepareStatement(deleteOferteData);
+		PreparedStatement deleteTranzactii = con.prepareStatement(deleteTranzactiiData);
+		deleteClient.execute();
+		deleteActiune.execute();
+		deleteCerere.execute();
+		deleteOferte.execute();
+		deleteTranzactii.execute();
 	}
 
 	public void initDatabase() throws SQLException {
@@ -134,7 +169,8 @@ public class Application {
 
 		// clear all
 		clearLists();
-		clearDBTables();
+		//comentat momentan
+		//clearDBTables();
 	}
 
 }
