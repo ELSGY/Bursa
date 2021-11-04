@@ -118,9 +118,29 @@ public class Application {
 
 	}
 
-	public void initRequests() {
-		//TODO implementare plus introducere in baza de date
-	}
+	public void initRequests() throws SQLException {
+		//TODO implementare plus introducere in baza de date => cred ca am rezolvat
+
+		int nrClients = listClients.size();
+		int nrStocks = listStocks.size();
+
+		for (int client = 1; client <= nrClients; client++) {
+			int nrRequests = getRandomInteger(1, nrStocks);
+			for (int request = 1; request <= nrRequests; request++) {
+				int offerStock = getRandomInteger(1, nrStocks);
+				int nrRequest = getRandomInteger(1, 5);
+
+				listRequests.add(new Requests(client, offerStock, nrRequest));
+				for (Requests requests: listRequests) {
+					//TODO DE VAZUT [SQLITE_CONSTRAINT_PRIMARYKEY]  A PRIMARY KEY constraint failed (UNIQUE constraint failed: client.id_client) (NU STIU DC ati pus unique)
+					String insertRequests = "INSERT INTO oferte (id_vanzator, id_actiune, nr_actiuni) VALUES ("+ requests.getId_client()+", "+requests.getId_actiune() +", "+requests.getNr_actiuni()+")";
+					Statement stmt = con.createStatement();
+					stmt.executeUpdate(insertRequests);
+
+			}
+		}
+
+	}}
 
 	public void clearLists() {
 		listClients.clear();
