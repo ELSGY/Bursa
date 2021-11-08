@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 public class Main {
 
-	public static void main(String[] args) throws SQLException {
+	public static void main(String[] args) throws SQLException, InterruptedException {
 
 		Application app = new Application();
 		app.initDatabase();
@@ -17,7 +17,9 @@ public class Main {
 			switch (choice) {
 				case "a" -> app.startSimulation();
 				case "b" -> app.showDB();
-				case "c" -> app.showTranzactions();
+				case "c" -> app.showClientsRequests();
+				case "d" -> app.showSellersOffers();
+				case "e" -> app.showTranzactions();
 				case "?" -> app.showMenu();
 			}
 		} while (!choice.equals("q"));

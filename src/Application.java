@@ -6,13 +6,16 @@ import models.Stocks;
 import models.Tranzactions;
 import utils.DatabaseConnection;
 
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class Application {
@@ -26,6 +29,7 @@ public class Application {
 	private List<Offers> listOffers = new ArrayList<>();
 	private List<Requests> listRequests = new ArrayList<>();
 	private List<Tranzactions> listTranzactions = new ArrayList<>();
+	private List<Thread> thd = new ArrayList<>();
 	// DB
 	Connection con = null;
 
@@ -82,20 +86,23 @@ public class Application {
 
 	public void initOffers() throws SQLException {
 
-		// nr clienti in bd
-		int nrClients = listClients.size();
+		// nr vanzatori in bd
+		int nrSellers = listSellers.size();
 		// nr actiuni in bd
 		int nrStocks = listStocks.size();
 
-		for (int client = 1; client <= nrClients; client++) { //pentru fiecare client
+		for (int seller = 1; seller <= nrSellers; seller++) { //pentru fiecare vanzator
 
-			int nrOffers = getRandomInteger(1, nrStocks); //un numar random de oferte, dar nu mai multe decat numarul total de actiuni diferite
+			int nrOffers = getRandomInteger(1, nrStocks); //un numar random de oferte
 
 			for (int offer = 1; offer <= nrOffers; offer++) {// pentru fiecare oferta
-				int offerStock = getRandomInteger(1, nrStocks);// actiunea
-				int nrStocksPerOffer = getRandomInteger(1, 5);// numarul de actiuni
+				int offerStock = offer;// actiunea
+				int nrStocksPerOffer = getRandomInteger(1, 10);// numarul de actiuni
 
-				listOffers.add(new Offers(client, offerStock, nrStocksPerOffer));
+				listOffers.add(new Offers(seller, offerStock, nrStocksPerOffer));
+
+				// add offer to it's seller
+				listSellers.get(seller - 1).addOffer(new Offers(seller, offerStock, nrStocksPerOffer));
 			}
 		}
 
@@ -108,16 +115,23 @@ public class Application {
 
 	public void initRequests() throws SQLException {
 
+		// nr clienti in bd
 		int nrClients = listClients.size();
+		// nr actiuni in bd
 		int nrStocks = listStocks.size();
 
-		for (int client = 1; client <= nrClients; client++) {
-			int nrRequests = getRandomInteger(1, nrStocks);
-			for (int request = 1; request <= nrRequests; request++) {
-				int offerStock = getRandomInteger(1, nrStocks);
-				int nrRequest = getRandomInteger(1, 5);
+		for (int client = 1; client <= nrClients; client++) {// pentur fiecare client
+
+			int nrRequests = getRandomInteger(1, nrStocks);// un numar random de cereri
+
+			for (int request = 1; request <= nrRequests; request++) {// pentru fiecare cerere
+				int offerStock = request;
+				int nrRequest = getRandomInteger(1, 10);
 
 				listRequests.add(new Requests(client, offerStock, nrRequest));
+
+				// add request to it's client
+				listClients.get(client - 1).addRequest(new Requests(client, offerStock, nrRequest));
 			}
 		}
 
@@ -128,7 +142,7 @@ public class Application {
 		}
 	}
 
-	public void showDB(){
+	public void showDB() {
 
 		System.out.println("CLIENTI:");
 		System.out.println(listClients.toString());
@@ -156,12 +170,26 @@ public class Application {
 		}
 	}
 
+	public void showClientsRequests() {
+		listClients.forEach(client -> {
+			client.showRequests();
+		});
+	}
+
+	public void showSellersOffers() {
+		listSellers.forEach(seller -> {
+			seller.showOffers();
+		});
+	}
+
 	public void showMenu() {
 
 		System.out.println("Command Options: ");
 		System.out.println("a: Start simulation");
 		System.out.println("b: Show database");
-		System.out.println("c: Show tranzactions");
+		System.out.println("c: Show clients' requests");
+		System.out.println("d: Show sellers' offers");
+		System.out.println("e: Show tranzactions");
 		System.out.println("q: Quit");
 	}
 
@@ -210,11 +238,24 @@ public class Application {
 		LOG.info("Simulation is ready!");
 	}
 
-	public void startSimulation() {
+	public void startSimulation() throws InterruptedException {
 		// TODO functie startSimulation() - aici e concurenta
 		// TODO tranzactions - asta nu se initializeaza, se pun date in ea in startSimulation(), cand se fac calculele
 
 		LOG.info("Simulation started...");
+
+		// make a thread for every client
+		listClients.forEach(client -> {
+			thd.add(new Thread(client));
+		});
+
+		thd.forEach(thread -> {
+			thread.start();
+		});
+
+		System.out.println(thd);
+
+
 	}
 
 }
