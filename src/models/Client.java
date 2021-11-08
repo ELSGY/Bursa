@@ -35,5 +35,6 @@ public class Client implements Runnable {
 	@Override
 	public void run() {
 
+		System.out.println("i'm ready");
 	}
 }
