@@ -6,16 +6,14 @@ import models.Stocks;
 import models.Tranzactions;
 import utils.DatabaseConnection;
 
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.ListIterator;
 import java.util.logging.Logger;
 
 public class Application {
@@ -166,7 +164,7 @@ public class Application {
 		if (listTranzactions.isEmpty()) {
 			System.out.println("No tranzactions took place...");
 		} else {
-			listTranzactions.toString();
+			System.out.println((listTranzactions.toString()));
 		}
 	}
 
@@ -199,6 +197,7 @@ public class Application {
 		listStocks.clear();
 		listOffers.clear();
 		listRequests.clear();
+		listTranzactions.clear();
 	}
 
 	public void clearDBTables() throws SQLException {
@@ -245,17 +244,45 @@ public class Application {
 		LOG.info("Simulation started...");
 
 		// make a thread for every client
+		//		listClients.forEach(client -> {
+		//			thd.add(new Thread(client));
+		//		});
+		//
+		//		thd.forEach(thread -> {
+		//			thread.start();
+		//		});
+
+
+		//		System.out.println(thd);
+
+		ListIterator<Offers> iter = listOffers.listIterator();
+
 		listClients.forEach(client -> {
-			thd.add(new Thread(client));
+
+			List<Requests> clientRequests = client.getClientRequests();
+
+			clientRequests.forEach(req -> {
+
+				int id_actiune = req.getId_actiune();
+				int nr_actiuni = req.getNr_actiuni();
+
+				while (iter.hasNext()) {
+
+					if (id_actiune == iter.next().getId_actiune()) {
+
+						if(nr_actiuni != 0 && iter.next().getNr_actiuni() != 0) {
+							int min = (nr_actiuni < iter.next().getNr_actiuni()) ? nr_actiuni : iter.next().getNr_actiuni();
+
+							iter.next().setNr_actiuni(iter.next().getNr_actiuni() - min);
+							req.setNr_actiuni(req.getNr_actiuni() - min);
+
+							listTranzactions.add(new Tranzactions(id_actiune, client.getId_client(), iter.next().getId_vanzator(), min));
+						}
+					}
+				}
+			});
 		});
-
-		thd.forEach(thread -> {
-			thread.start();
-		});
-
-		System.out.println(thd);
-
-
+		LOG.info("Simulation ended...");
 	}
 
 }
