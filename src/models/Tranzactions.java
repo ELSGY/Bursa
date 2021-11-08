@@ -7,7 +7,6 @@ public class Tranzactions {
 	private final int id_vanzator;
 	private final int nr_tranzactii;
 
-
 	public Tranzactions(int id_actiune, int id_client, int id_vanzator, int nr_tranzactii) {
 		this.id_actiune = id_actiune;
 		this.id_client = id_client;

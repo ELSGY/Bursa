@@ -1,18 +1,25 @@
-import utils.DatabaseConnection;
-
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.logging.Logger;
+import java.util.Scanner;
 
 public class Main {
 
-	private final static Logger LOG = Logger.getLogger(Main.class.getName());
-
 	public static void main(String[] args) throws SQLException {
 
-		new Application().initDatabase();
+		Application app = new Application();
+		app.initDatabase();
 
+		app.showMenu();
+
+		String choice;
+		do {
+			Scanner scan = new Scanner(System.in);
+			choice = scan.nextLine();
+			switch (choice) {
+				case "a" -> app.startSimulation();
+				case "b" -> app.showDB();
+				case "c" -> app.showTranzactions();
+				case "?" -> app.showMenu();
+			}
+		} while (!choice.equals("q"));
 	}
 }
