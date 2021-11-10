@@ -1,3 +1,5 @@
+import utils.Application;
+
 import java.sql.SQLException;
 import java.util.Scanner;
 
