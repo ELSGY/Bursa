@@ -1,10 +1,11 @@
+package utils;
+
 import models.Client;
 import models.Offers;
 import models.Requests;
 import models.Seller;
 import models.Stocks;
 import models.Tranzactions;
-import utils.DatabaseConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,12 +25,20 @@ public class Application {
 	private List<Client> listClients = new ArrayList<>();
 	private List<Seller> listSellers = new ArrayList<>();
 	private List<Stocks> listStocks = new ArrayList<>();
-	private List<Offers> listOffers = new ArrayList<>();
+	private static List<Offers> listOffers = new ArrayList<>();
 	private List<Requests> listRequests = new ArrayList<>();
 	private List<Tranzactions> listTranzactions = new ArrayList<>();
 	private List<Thread> thd = new ArrayList<>();
 	// DB
 	Connection con = null;
+
+	public static List<Offers> getListOffers(){
+		return listOffers;
+	}
+
+	public static void setListOffers(List<Offers> list){
+		listOffers = list;
+	}
 
 	public int getRandomInteger(int minimum, int maximum) {
 		return ((int) (Math.random() * (maximum - minimum))) + minimum;
@@ -244,44 +253,19 @@ public class Application {
 		LOG.info("Simulation started...");
 
 		// make a thread for every client
-		//		listClients.forEach(client -> {
-		//			thd.add(new Thread(client));
-		//		});
-		//
-		//		thd.forEach(thread -> {
-		//			thread.start();
-		//		});
-
-
-		//		System.out.println(thd);
-
-		ListIterator<Offers> iter = listOffers.listIterator();
-
 		listClients.forEach(client -> {
-
-			List<Requests> clientRequests = client.getClientRequests();
-
-			clientRequests.forEach(req -> {
-
-				int id_actiune = req.getId_actiune();
-				int nr_actiuni = req.getNr_actiuni();
-
-				while (iter.hasNext()) {
-
-					if (id_actiune == iter.next().getId_actiune()) {
-
-						if(nr_actiuni != 0 && iter.next().getNr_actiuni() != 0) {
-							int min = (nr_actiuni < iter.next().getNr_actiuni()) ? nr_actiuni : iter.next().getNr_actiuni();
-
-							iter.next().setNr_actiuni(iter.next().getNr_actiuni() - min);
-							req.setNr_actiuni(req.getNr_actiuni() - min);
-
-							listTranzactions.add(new Tranzactions(id_actiune, client.getId_client(), iter.next().getId_vanzator(), min));
-						}
-					}
-				}
-			});
+			thd.add(new Thread(client));
 		});
+
+		thd.forEach(thread -> {
+			thread.start();
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		});
+
 		LOG.info("Simulation ended...");
 	}
 

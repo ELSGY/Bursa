@@ -31,6 +31,6 @@ public class Tranzactions {
 	}
 
 	public String toString() {
-		return "\nClientul cu numarul " + this.getId_client() + " a cumparat un numar " + this.getNr_tranzactii() + " de actiuni de tipul " + this.getId_actiune() + " de la vanzatorul " + this.getId_vanzator();
+		return "\nClientul cu ID-ul" + this.getId_client() + " a cumparat un numar " + this.getNr_tranzactii() + " de actiuni de tipul " + this.getId_actiune() + " de la vanzatorul " + this.getId_vanzator();
 	}
 }
