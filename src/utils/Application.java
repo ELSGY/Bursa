@@ -177,6 +177,7 @@ public class Application {
 		System.out.println("CERERI:");
 		System.out.println(listRequests.toString());
 
+		_showMenu();
 	}
 
 	public void showTranzactions() {
@@ -186,22 +187,32 @@ public class Application {
 		} else {
 			System.out.println((listTranzactions.toString()));
 		}
+		_showMenu();
 	}
 
 	public void showClientsRequests() {
 		listClients.forEach(client -> {
 			client.showRequests();
 		});
+		_showMenu();
 	}
 
 	public void showSellersOffers() {
 		listSellers.forEach(seller -> {
 			seller.showOffers();
 		});
+		_showMenu();
+	}
+
+	private void _showMenu() {
+		System.out.println("");
+		System.out.println("");
+		System.out.println("?: Show Menu");
+		System.out.println("q: Quit");
+		System.out.println("");
 	}
 
 	public void showMenu() {
-		System.out.println("Command Options: ");
 		System.out.println("a: Start simulation");
 		System.out.println("b: Show database");
 		System.out.println("c: Show clients' requests");
@@ -277,6 +288,7 @@ public class Application {
 		});
 
 		LOG.info("Simulation ended...");
+		_showMenu();
 	}
 
 }
