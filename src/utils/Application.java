@@ -7,6 +7,7 @@ import models.Seller;
 import models.Stocks;
 import models.Tranzactions;
 
+import java.awt.desktop.OpenFilesEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -40,11 +41,11 @@ public class Application {
 		listOffers = list;
 	}
 
-	public int getRandomInteger(int minimum, int maximum) {
+	private int getRandomInteger(int minimum, int maximum) {
 		return ((int) (Math.random() * (maximum - minimum))) + minimum;
 	}
 
-	public void initClients() throws SQLException {
+	private void initClients() throws SQLException {
 
 		// standard personal: intre 5 - 10 clienti
 		int nrClient = getRandomInteger(5, 10);
@@ -60,7 +61,7 @@ public class Application {
 		}
 	}
 
-	public void initSellers() throws SQLException {
+	private void initSellers() throws SQLException {
 
 		final String getAllSellers = "select * from vanzator";
 
@@ -75,7 +76,7 @@ public class Application {
 		}
 	}
 
-	public void initStocks() throws SQLException {
+	private void initStocks() throws SQLException {
 
 		final String getAllStocks = "select * from actiune";
 
@@ -91,25 +92,30 @@ public class Application {
 		}
 	}
 
-	public void initOffers() throws SQLException {
-
+	private void initOffers() throws SQLException {
+		Offers o;
 		// nr vanzatori in bd
 		int nrSellers = listSellers.size();
 		// nr actiuni in bd
 		int nrStocks = listStocks.size();
-
+ 		int offerStock, noOffers, actions;
 		for (int seller = 1; seller <= nrSellers; seller++) { //pentru fiecare vanzator
 
-			int nrOffers = getRandomInteger(1, nrStocks); //un numar random de oferte
+			noOffers = getRandomInteger(1, nrStocks); // numarul de oferte ale lui seller
 
-			for (int offer = 1; offer <= nrOffers; offer++) {// pentru fiecare oferta
-				int offerStock = offer;// actiunea
+			for (int offer = 1; offer <= noOffers; offer++) {// pentru fiecare oferta
+				actions = getRandomInteger(1, 10);
+				do {
+					offerStock = getRandomInteger(1, nrStocks); // id ul oferei
+					o = new Offers(offerStock, seller, actions);
+				}while(listOffers.contains(o)); // 0 pt ca numarul de actiuni
+																						// nu conteaza momentan
 				int nrStocksPerOffer = getRandomInteger(1, 10);// numarul de actiuni
 
-				listOffers.add(new Offers(seller, offerStock, nrStocksPerOffer));
+				listOffers.add(o);
 
 				// add offer to it's seller
-				listSellers.get(seller - 1).addOffer(new Offers(seller, offerStock, nrStocksPerOffer));
+				listSellers.get(seller - 1).addOffer(o);
 			}
 		}
 
@@ -120,25 +126,30 @@ public class Application {
 		}
 	}
 
-	public void initRequests() throws SQLException {
+	private void initRequests() throws SQLException {
 
 		// nr clienti in bd
 		int nrClients = listClients.size();
 		// nr actiuni in bd
 		int nrStocks = listStocks.size();
-
+		int offerStock, actions, noRequests;
+		Requests r;
 		for (int client = 1; client <= nrClients; client++) {// pentur fiecare client
 
-			int nrRequests = getRandomInteger(1, nrStocks);// un numar random de cereri
+			noRequests = getRandomInteger(1, nrStocks);// un numar random de cereri
 
-			for (int request = 1; request <= nrRequests; request++) {// pentru fiecare cerere
-				int offerStock = request;
-				int nrRequest = getRandomInteger(1, 10);
+			for (int request = 1; request <= noRequests; request++) {// pentru fiecare cerere
+				actions = getRandomInteger(1, 10);
+				do{
+					offerStock = getRandomInteger(1, nrStocks);
+					r = new Requests(client, offerStock, actions);
+				}while(listRequests.contains(r)); // 0 pentru ca numarul de
+																						// cereri nu conteaz momentan
 
-				listRequests.add(new Requests(client, offerStock, nrRequest));
+				listRequests.add(r);
 
 				// add request to it's client
-				listClients.get(client - 1).addRequest(new Requests(client, offerStock, nrRequest));
+				listClients.get(client - 1).addRequest(r);
 			}
 		}
 
@@ -166,6 +177,7 @@ public class Application {
 		System.out.println("CERERI:");
 		System.out.println(listRequests.toString());
 
+		_showMenu();
 	}
 
 	public void showTranzactions() {
@@ -175,23 +187,32 @@ public class Application {
 		} else {
 			System.out.println((listTranzactions.toString()));
 		}
+		_showMenu();
 	}
 
 	public void showClientsRequests() {
 		listClients.forEach(client -> {
 			client.showRequests();
 		});
+		_showMenu();
 	}
 
 	public void showSellersOffers() {
 		listSellers.forEach(seller -> {
 			seller.showOffers();
 		});
+		_showMenu();
+	}
+
+	private void _showMenu() {
+		System.out.println("");
+		System.out.println("");
+		System.out.println("?: Show Menu");
+		System.out.println("q: Quit");
+		System.out.println("");
 	}
 
 	public void showMenu() {
-
-		System.out.println("Command Options: ");
 		System.out.println("a: Start simulation");
 		System.out.println("b: Show database");
 		System.out.println("c: Show clients' requests");
@@ -267,6 +288,7 @@ public class Application {
 		});
 
 		LOG.info("Simulation ended...");
+		_showMenu();
 	}
 
 }

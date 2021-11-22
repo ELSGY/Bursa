@@ -1,5 +1,7 @@
 package models;
 
+import java.util.Objects;
+
 public class Requests {
 
 	private final int id_client;
@@ -30,5 +32,18 @@ public class Requests {
 
 	public String toString() {
 		return "\nID_CLIENT: " + this.getId_client() + " ID_ACTIUNE: " + this.getId_actiune() + " NR_ACTIUNI: " + this.getNr_actiuni();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Requests requests = (Requests) o;
+		return id_client == requests.id_client && id_actiune == requests.id_actiune;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id_client, id_actiune);
 	}
 }

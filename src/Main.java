@@ -23,6 +23,10 @@ public class Main {
 				case "d" -> app.showSellersOffers();
 				case "e" -> app.showTranzactions();
 				case "?" -> app.showMenu();
+				default -> {
+					System.out.println(choice + " este o optiune necunoscuta, alege una din cele disponibile");
+					app.showMenu();
+				}
 			}
 		} while (!choice.equals("q"));
 	}

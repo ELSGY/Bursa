@@ -1,5 +1,7 @@
 package models;
 
+import java.util.Objects;
+
 public class Offers {
 
 	private final int id_vanzator;
@@ -30,5 +32,18 @@ public class Offers {
 
 	public String toString() {
 		return "\nID_VANZATOR: " + this.getId_vanzator() + " ID_ACTIUNE: " + this.getId_actiune() + " NR_ACTIUNI: " + this.getNr_actiuni();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Offers offers = (Offers) o;
+		return id_vanzator == offers.id_vanzator && id_actiune == offers.id_actiune;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id_vanzator, id_actiune);
 	}
 }
