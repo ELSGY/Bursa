@@ -39,6 +39,7 @@ public class Client implements Runnable {
 	public void run() {
 
 		List<Offers> listOffers = new ArrayList<>(Application.getListOffers());
+		List<Transactions> listTransactions = new ArrayList<>(Application.getListTransactions());
 
 		clientRequests.forEach(req -> {
 
@@ -51,14 +52,16 @@ public class Client implements Runnable {
 						off.setNr_actiuni(off.getNr_actiuni() - min);
 						req.setNr_actiuni(req.getNr_actiuni() - min);
 
-						System.out.println("Clientul: " + this.getId_client() + " a cumparat: " + min + " actiuni, actiunea: " + req.getId_actiune() + " de la vanzatorul: " + off.getId_vanzator());
+						listTransactions.add(new Transactions(req.getId_actiune(), req.getId_client(), off.getId_vanzator(), min));
+
+						System.out.println("Client: " + this.getId_client() + " purchased: " + min + " stocks, stock: " + req.getId_actiune() + " from: " + off.getId_vanzator());
 					}
 				}
 
 			});
 
 		});
-
 		Application.setListOffers(listOffers);
+		Application.setListTransactions(listTransactions);
 	}
 }
