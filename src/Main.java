@@ -24,7 +24,7 @@ public class Main {
 				case "e" -> app.showTranzactions();
 				case "?" -> app.showMenu();
 				default -> {
-					System.out.println(choice + " este o optiune necunoscuta, alege una din cele disponibile");
+					System.out.println("\"" + choice + "\"" + " unknown option, please select another option.");
 					app.showMenu();
 				}
 			}

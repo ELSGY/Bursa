@@ -1,13 +1,13 @@
 package models;
 
-public class Tranzactions {
+public class Transactions {
 
 	private final int id_actiune;
 	private final int id_client;
 	private final int id_vanzator;
 	private final int nr_tranzactii;
 
-	public Tranzactions(int id_actiune, int id_client, int id_vanzator, int nr_tranzactii) {
+	public Transactions(int id_actiune, int id_client, int id_vanzator, int nr_tranzactii) {
 		this.id_actiune = id_actiune;
 		this.id_client = id_client;
 		this.id_vanzator = id_vanzator;
@@ -30,7 +30,8 @@ public class Tranzactions {
 		return this.id_actiune;
 	}
 
+	@Override
 	public String toString() {
-		return "\nClientul cu ID-ul" + this.getId_client() + " a cumparat un numar " + this.getNr_tranzactii() + " de actiuni de tipul " + this.getId_actiune() + " de la vanzatorul " + this.getId_vanzator();
+		return "\nClient: " + this.getId_client() + " purchased: " + this.getNr_tranzactii() + " stocks, stock: " + this.getId_actiune() + " from: " + this.getId_vanzator();
 	}
 }

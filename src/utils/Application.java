@@ -5,9 +5,8 @@ import models.Offers;
 import models.Requests;
 import models.Seller;
 import models.Stocks;
-import models.Tranzactions;
+import models.Transactions;
 
-import java.awt.desktop.OpenFilesEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,7 +14,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.logging.Logger;
 
 public class Application {
@@ -26,19 +24,43 @@ public class Application {
 	private List<Client> listClients = new ArrayList<>();
 	private List<Seller> listSellers = new ArrayList<>();
 	private List<Stocks> listStocks = new ArrayList<>();
-	private static List<Offers> listOffers = new ArrayList<>();
 	private List<Requests> listRequests = new ArrayList<>();
-	private List<Tranzactions> listTranzactions = new ArrayList<>();
 	private List<Thread> thd = new ArrayList<>();
+	// Static Lists
+	private static List<Offers> listOffers = new ArrayList<>();
+	private static List<Transactions> listTransactions = new ArrayList<>();
 	// DB
-	Connection con = null;
+	static Connection con = null;
 
-	public static List<Offers> getListOffers(){
+	public static List<Offers> getListOffers() {
 		return listOffers;
 	}
 
-	public static void setListOffers(List<Offers> list){
+	public static void setListOffers(List<Offers> list) {
 		listOffers = list;
+	}
+
+	public static List<Transactions> getListTransactions() {
+		return listTransactions;
+	}
+
+	public static void setListTransactions(List<Transactions> list) {
+		listTransactions = list;
+	}
+
+	private void initTransactions(List<Transactions> list) throws SQLException {
+		Statement stmt = null;
+		stmt = con.createStatement();
+		Statement finalStmt = stmt;
+		list.forEach(t -> {
+			String insertOffers = "INSERT INTO tranzactii (id_actiune, id_client, id_vanzator, nr_tranzactii) " +
+								  "VALUES (" + t.getId_actiune() + ", " + t.getId_client() + ", " + t.getId_vanzator() + ", " + t.getNr_tranzactii() + ")";
+			try {
+				finalStmt.executeUpdate(insertOffers);
+			} catch (SQLException throwables) {
+				throwables.printStackTrace();
+			}
+		});
 	}
 
 	private int getRandomInteger(int minimum, int maximum) {
@@ -98,7 +120,7 @@ public class Application {
 		int nrSellers = listSellers.size();
 		// nr actiuni in bd
 		int nrStocks = listStocks.size();
- 		int offerStock, noOffers, actions;
+		int offerStock, noOffers, actions;
 		for (int seller = 1; seller <= nrSellers; seller++) { //pentru fiecare vanzator
 
 			noOffers = getRandomInteger(1, nrStocks); // numarul de oferte ale lui seller
@@ -108,8 +130,8 @@ public class Application {
 				do {
 					offerStock = getRandomInteger(1, nrStocks); // id ul oferei
 					o = new Offers(offerStock, seller, actions);
-				}while(listOffers.contains(o)); // 0 pt ca numarul de actiuni
-																						// nu conteaza momentan
+				} while (listOffers.contains(o)); // 0 pt ca numarul de actiuni
+				// nu conteaza momentan
 				int nrStocksPerOffer = getRandomInteger(1, 10);// numarul de actiuni
 
 				listOffers.add(o);
@@ -134,17 +156,17 @@ public class Application {
 		int nrStocks = listStocks.size();
 		int offerStock, actions, noRequests;
 		Requests r;
-		for (int client = 1; client <= nrClients; client++) {// pentur fiecare client
+		for (int client = 1; client <= nrClients; client++) {// pentru fiecare client
 
 			noRequests = getRandomInteger(1, nrStocks);// un numar random de cereri
 
 			for (int request = 1; request <= noRequests; request++) {// pentru fiecare cerere
 				actions = getRandomInteger(1, 10);
-				do{
+				do {
 					offerStock = getRandomInteger(1, nrStocks);
 					r = new Requests(client, offerStock, actions);
-				}while(listRequests.contains(r)); // 0 pentru ca numarul de
-																						// cereri nu conteaz momentan
+				} while (listRequests.contains(r)); // 0 pentru ca numarul de
+				// cereri nu conteaz momentan
 
 				listRequests.add(r);
 
@@ -182,12 +204,30 @@ public class Application {
 
 	public void showTranzactions() {
 
-		if (listTranzactions.isEmpty()) {
+		if (listTransactions.isEmpty()) {
 			System.out.println("No tranzactions took place...");
 		} else {
-			System.out.println((listTranzactions.toString()));
+			listTransactions.forEach(t -> {
+				try {
+					System.out.println("Client: " + t.getId_client() +
+									   " purchased: " + t.getNr_tranzactii() +
+									   " stocks, stock: " + t.getId_actiune() +
+									   " from: " + getNumeVanzator(t.getId_vanzator()));
+				} catch (SQLException throwables) {
+					throwables.printStackTrace();
+				}
+			});
 		}
 		_showMenu();
+	}
+
+	public String getNumeVanzator(int id) throws SQLException {
+		String getClientName = "SELECT nume\n" +
+							   "  FROM vanzator\n" +
+							   " WHERE id_vanzator = " + id + ";\n";
+		Statement stmt = con.createStatement();
+		ResultSet result = stmt.executeQuery(getClientName);
+		return result.getString("nume");
 	}
 
 	public void showClientsRequests() {
@@ -227,7 +267,7 @@ public class Application {
 		listStocks.clear();
 		listOffers.clear();
 		listRequests.clear();
-		listTranzactions.clear();
+		listTransactions.clear();
 	}
 
 	public void clearDBTables() throws SQLException {
@@ -247,6 +287,14 @@ public class Application {
 		deleteTranz.execute();
 	}
 
+	public void initDBTables() throws SQLException {
+		initClients();
+		initSellers();
+		initStocks();
+		initOffers();
+		initRequests();
+	}
+
 	public void initDatabase() throws SQLException {
 
 		// setup connection
@@ -254,22 +302,17 @@ public class Application {
 
 		// clear all
 		clearLists();
+
 		// clear DB
 		clearDBTables();
 
 		// init lists
-		initClients();
-		initSellers();
-		initStocks();
-		initOffers();
-		initRequests();
+		initDBTables();
 
 		LOG.info("Simulation is ready!");
 	}
 
-	public void startSimulation() throws InterruptedException {
-		// TODO functie startSimulation() - aici e concurenta
-		// TODO tranzactions - asta nu se initializeaza, se pun date in ea in startSimulation(), cand se fac calculele
+	public void startSimulation() throws InterruptedException, SQLException {
 
 		LOG.info("Simulation started...");
 
@@ -277,6 +320,8 @@ public class Application {
 		listClients.forEach(client -> {
 			thd.add(new Thread(client));
 		});
+
+		LOG.info("Transactions in process...");
 
 		thd.forEach(thread -> {
 			thread.start();
@@ -286,6 +331,9 @@ public class Application {
 				e.printStackTrace();
 			}
 		});
+		
+		// insert transactions into DB
+		initTransactions(listTransactions);
 
 		LOG.info("Simulation ended...");
 		_showMenu();
