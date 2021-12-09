@@ -1,11 +1,13 @@
 import utils.Application;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Scanner;
+import java.util.concurrent.TimeoutException;
 
 public class Main {
 
-	public static void main(String[] args) throws SQLException, InterruptedException {
+	public static void main(String[] args) throws SQLException, InterruptedException, IOException, TimeoutException {
 
 		Application app = new Application();
 		app.initDatabase();

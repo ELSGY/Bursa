@@ -6,7 +6,9 @@ import models.Requests;
 import models.Seller;
 import models.Stocks;
 import models.Transactions;
+import rabbitmq.Consumer;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,12 +16,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 public class Application {
 
 	// Logger
 	private final static Logger LOG = Logger.getLogger(Application.class.getName());
+	Consumer consumer = new Consumer();
 	// Lists
 	private List<Client> listClients = new ArrayList<>();
 	private List<Seller> listSellers = new ArrayList<>();
@@ -67,7 +71,7 @@ public class Application {
 		return ((int) (Math.random() * (maximum - minimum))) + minimum;
 	}
 
-	private void initClients() throws SQLException {
+	private void initClients() throws SQLException, IOException, TimeoutException {
 
 		// standard personal: intre 5 - 10 clienti
 		int nrClient = getRandomInteger(5, 10);
@@ -287,7 +291,7 @@ public class Application {
 		deleteTranz.execute();
 	}
 
-	public void initDBTables() throws SQLException {
+	public void initDBTables() throws SQLException, IOException, TimeoutException {
 		initClients();
 		initSellers();
 		initStocks();
@@ -295,7 +299,7 @@ public class Application {
 		initRequests();
 	}
 
-	public void initDatabase() throws SQLException {
+	public void initDatabase() throws SQLException, IOException, TimeoutException {
 
 		// setup connection
 		con = new DatabaseConnection().connect();
@@ -312,7 +316,7 @@ public class Application {
 		LOG.info("Simulation is ready!");
 	}
 
-	public void startSimulation() throws InterruptedException, SQLException {
+	public void startSimulation() throws InterruptedException, SQLException, IOException, TimeoutException {
 
 		LOG.info("Simulation started...");
 
@@ -331,9 +335,12 @@ public class Application {
 				e.printStackTrace();
 			}
 		});
-		
+
 		// insert transactions into DB
 		initTransactions(listTransactions);
+
+		// consume queue
+		consumer.consumeMessage(listTransactions.size());
 
 		LOG.info("Simulation ended...");
 		_showMenu();
