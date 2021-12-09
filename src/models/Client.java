@@ -1,17 +1,21 @@
 package models;
 
+import rabbitmq.Sender;
 import utils.Application;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public class Client implements Runnable {
 
 	private final int id_client;
-	private List<Requests> clientRequests = new ArrayList<>();
-	private List<Offers> sGLB = new ArrayList<>();
+	private final List<Requests> clientRequests = new ArrayList<>();
+	private final List<Offers> sGLB = new ArrayList<>();
+	private final Sender sender = new Sender();
 
-	public Client(int id_client) {
+	public Client(int id_client) throws IOException, TimeoutException {
 		this.id_client = id_client;
 	}
 
@@ -53,6 +57,12 @@ public class Client implements Runnable {
 						req.setNr_actiuni(req.getNr_actiuni() - min);
 
 						listTransactions.add(new Transactions(req.getId_actiune(), req.getId_client(), off.getId_vanzator(), min));
+
+						try {
+							sender.sendMessage(req.getId_client(),min, req.getId_actiune(), off.getId_vanzator());
+						} catch (IOException | TimeoutException e) {
+							e.printStackTrace();
+						}
 
 						System.out.println("Client: " + this.getId_client() + " purchased: " + min + " stocks, stock: " + req.getId_actiune() + " from: " + off.getId_vanzator());
 					}
