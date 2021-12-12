@@ -59,12 +59,12 @@ public class Client implements Runnable {
 						listTransactions.add(new Transactions(req.getId_actiune(), req.getId_client(), off.getId_vanzator(), min));
 
 						try {
-							sender.sendMessage(req.getId_client(),min, req.getId_actiune(), off.getId_vanzator());
+							sender.sendMessage(req.getId_client(), min, req.getId_actiune(), off.getId_vanzator());
 						} catch (IOException | TimeoutException e) {
 							e.printStackTrace();
 						}
 
-						System.out.println("Client: " + this.getId_client() + " purchased: " + min + " stocks, stock: " + req.getId_actiune() + " from: " + off.getId_vanzator());
+						//System.out.println("Client: " + this.getId_client() + " purchased: " + min + " stocks, stock: " + req.getId_actiune() + " from: " + off.getId_vanzator());
 					}
 				}
 

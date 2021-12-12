@@ -326,6 +326,7 @@ public class Application {
 		});
 
 		LOG.info("Transactions in process...");
+		LOG.info("Sending messages to queue...");
 
 		thd.forEach(thread -> {
 			thread.start();
@@ -335,11 +336,14 @@ public class Application {
 				e.printStackTrace();
 			}
 		});
+		//barber shop problem
+		//TODO update DB
 
 		// insert transactions into DB
 		initTransactions(listTransactions);
 
 		// consume queue
+		LOG.info("Getting messages from queue...");
 		consumer.consumeMessage(listTransactions.size());
 
 		LOG.info("Simulation ended...");
