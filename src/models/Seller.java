@@ -5,13 +5,12 @@ import java.util.List;
 
 public class Seller {
 
-	private final int id_vanzator;
-	private final String nume;
-	private List<Offers> sellerOffers = new ArrayList<>();
+	private int id_vanzator;
+	private String nume;
+	private final List<Offers> sellerOffers = new ArrayList<>();
+	private final List<Offers> originalSellerOffers = new ArrayList<>();
 
-	public Seller(int id_vanzator, String nume) {
-		this.id_vanzator = id_vanzator;
-		this.nume = nume;
+	public Seller() {
 	}
 
 	public int getId_vanzator() {
@@ -22,19 +21,39 @@ public class Seller {
 		return this.nume;
 	}
 
-	public List<Offers> getSellerOffers(){
-		return sellerOffers;
+	public void setId_vanzator(int id) {
+		this.id_vanzator = id;
 	}
 
-	public void addOffer(Offers off){
+	public void setNume(String nume) {
+		this.nume = nume;
+	}
+
+	public List<Offers> getOriginalSellerOffers() {
+		return originalSellerOffers;
+	}
+
+	public void addOffer(Offers off) {
 		sellerOffers.add(off);
 	}
 
-	public void showOffers(){
-		System.out.println("\nSELLER: " + this.getId_vanzator() + " LIST OFFERS: \n" + this.getSellerOffers());
+	public void addOriginalOffer(Offers off) {
+		originalSellerOffers.add(off);
+	}
+
+	public void showOffers() {
+		System.out.println("\nSELLER: " + this.getId_vanzator() + " LIST OFFERS: \n" + this.getOriginalSellerOffers());
 	}
 
 	public String toString() {
 		return "\nID_VANZATOR: " + this.getId_vanzator() + " NUME: " + this.getNume();
+	}
+
+	public void sellerReady(String nume) {
+		System.out.println(nume + " has free places for every offer!");
+	}
+
+	public void isTrading(String seller, int client) {
+		System.out.println(seller + " is trading with client " + client);
 	}
 }

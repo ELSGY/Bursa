@@ -23,7 +23,9 @@ public class Main {
 				case "b" -> app.showDB();
 				case "c" -> app.showClientsRequests();
 				case "d" -> app.showSellersOffers();
-				case "e" -> app.showTranzactions();
+				case "e" -> app.showRequestsDifferences();
+				case "f" -> app.showOffersDifferences();
+				case "g" -> app.showTranzactions();
 				case "?" -> app.showMenu();
 				default -> {
 					System.out.println("\"" + choice + "\"" + " unknown option, please select another option.");

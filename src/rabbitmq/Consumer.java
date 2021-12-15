@@ -19,7 +19,7 @@ public class Consumer {
 	private static final String QUEUE = "stock-transactions";
 	private final List<String> MESSAGE = new ArrayList<>();
 
-	public void consumeMessage(int nrMessages) throws IOException, TimeoutException {
+	public synchronized void consumeMessage(int nrMessages) throws IOException, TimeoutException {
 
 		try (Connection connection = factory.newConnection()) {
 			Channel channel = connection.createChannel();
