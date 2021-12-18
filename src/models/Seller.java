@@ -8,7 +8,6 @@ public class Seller {
 	private int id_vanzator;
 	private String nume;
 	private final List<Offers> sellerOffers = new ArrayList<>();
-	private final List<Offers> originalSellerOffers = new ArrayList<>();
 
 	public Seller() {
 	}
@@ -29,31 +28,16 @@ public class Seller {
 		this.nume = nume;
 	}
 
-	public List<Offers> getOriginalSellerOffers() {
-		return originalSellerOffers;
-	}
-
 	public void addOffer(Offers off) {
 		sellerOffers.add(off);
 	}
 
-	public void addOriginalOffer(Offers off) {
-		originalSellerOffers.add(off);
-	}
-
 	public void showOffers() {
-		System.out.println("\nSELLER: " + this.getId_vanzator() + " LIST OFFERS: \n" + this.getOriginalSellerOffers());
+		System.out.println("\nSELLER: " + this.getId_vanzator() + " LIST OFFERS: \n" + this.sellerOffers);
 	}
 
 	public String toString() {
 		return "\nID_VANZATOR: " + this.getId_vanzator() + " NUME: " + this.getNume();
 	}
 
-	public void sellerReady(String nume) {
-		System.out.println(nume + " has free places for every offer!");
-	}
-
-	public void isTrading(String seller, int client) {
-		System.out.println(seller + " is trading with client " + client);
-	}
 }

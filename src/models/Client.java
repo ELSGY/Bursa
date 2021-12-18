@@ -1,7 +1,6 @@
 package models;
 
 import rabbitmq.Sender;
-import utils.Application;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,9 +13,7 @@ public class Client implements Runnable {
 
 	private int id_client;
 	private final List<Requests> clientRequests = new ArrayList<>();
-	private final List<Requests> originalClientRequests = new ArrayList<>();
 	private final Sender sender = new Sender();
-	Application app = new Application();
 
 	public Client() {
 	}
@@ -30,15 +27,11 @@ public class Client implements Runnable {
 	}
 
 	public List<Requests> getOriginalClientRequests() {
-		return originalClientRequests;
+		return clientRequests;
 	}
 
 	public void addRequest(Requests req) {
 		clientRequests.add(req);
-	}
-
-	public void addOriginalRequest(Requests req) {
-		originalClientRequests.add(req);
 	}
 
 	public void showRequests() {
@@ -49,51 +42,7 @@ public class Client implements Runnable {
 		return "\nID_CLIENT: " + this.getId_client();
 	}
 
-	public void tookAPlaceInLine(int id) {
-		System.out.println("Client " + id + " took a place in line at seller x for offer y");
-	}
-
-	@Override
-	public void run() {
-		// Lambda Expression
-		tradeStocks();
-	}
-
-	public void tradeStocks() {
-
-		ReentrantLock mutex = new ReentrantLock();
-
-
-		List<Offers> listOffers = Collections.synchronizedList(app.getOffers());
-		List<Transactions> listTransactions = Collections.synchronizedList(app.getTransactions());
-
-		synchronized (listOffers) {
-			synchronized (listTransactions) {
-				clientRequests.forEach(req -> listOffers.forEach(off -> {
-
-					if (req.getId_actiune() == off.getId_actiune()) {
-						if (req.getNr_actiuni() != 0 && off.getNr_actiuni() != 0) {
-							int min = Math.min(req.getNr_actiuni(), off.getNr_actiuni());
-							System.out.println(min);
-
-							//off.setNr_actiuni(off.getNr_actiuni() - min); - >
-							setNr_actiuni(off, off.getNr_actiuni() - min);
-							req.setNr_actiuni(req.getNr_actiuni() - min);
-
-							//Application.listTransactions.add(new Transactions(req.getId_actiune(), req.getId_client(), off.getId_vanzator(), min)); ->
-							addTransactions(req.getId_actiune(), req.getId_client(), off.getId_vanzator(), min);
-						}
-					}
-				}));
-			}
-		}
-	}
-
-	private void addTransactions(int id_actiune, int id_client, int id_vanzator, int min) {
-
-		System.out.println("+++");
-		app.updateTransactions(new Transactions(id_actiune, id_client, id_vanzator, min));
-
+	private void sendMessageToQueue(int id_client, int min, int id_actiune, int id_vanzator) {
 		try {
 			sender.sendMessage(id_client, min, id_actiune, id_vanzator);
 		} catch (IOException | TimeoutException e) {
@@ -101,7 +50,41 @@ public class Client implements Runnable {
 		}
 	}
 
-	private void setNr_actiuni(Offers obj, int nr_actiuni) {
-		app.updateOffers(obj, nr_actiuni);
+	private void addTransactions(int id_actiune, int id_client, int id_vanzator, int min) {
+		SingletonMarket.getInstance().addTransactions(new Transactions(id_actiune, id_client, id_vanzator, min));
+	}
+
+	public void tradeStocks() {
+
+		ReentrantLock mutex = new ReentrantLock();
+
+		this.clientRequests.forEach(req -> Collections.synchronizedList(SingletonMarket.getInstance().getListOffers()).forEach(off -> {
+			if (req.getId_actiune() == off.getId_actiune()) {
+				if (req.getNr_actiuni() != 0 && off.getNr_actiuni() != 0) {
+
+					int min = Math.min(req.getNr_actiuni(), off.getNr_actiuni());
+
+					req.setNr_actiuni(Math.abs(req.getNr_actiuni() - min));
+					SingletonMarket.getInstance().addRequests(req);
+					SingletonMarket.getInstance().updateOffer(off, off.getNr_actiuni() - min);
+
+					addTransactions(req.getId_actiune(),
+									req.getId_client(),
+									off.getId_vanzator(), min);
+					sendMessageToQueue(req.getId_client(),
+									   min,
+									   req.getId_actiune(),
+									   off.getId_vanzator());
+				}
+			} else {
+				SingletonMarket.getInstance().addRequests(req);
+			}
+
+		}));
+	}
+
+	@Override
+	public void run() {
+		tradeStocks();
 	}
 }

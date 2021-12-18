@@ -4,6 +4,7 @@ import models.Client;
 import models.Offers;
 import models.Requests;
 import models.Seller;
+import models.SingletonMarket;
 import models.Stocks;
 import models.Transactions;
 import rabbitmq.Consumer;
@@ -15,13 +16,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
@@ -29,52 +27,27 @@ public class Application {
 
 	// Logger
 	private final static Logger LOG = Logger.getLogger(Application.class.getName());
-	Consumer consumer = new Consumer();
 	// Lists
 	private List<Client> listClients = new ArrayList<>();
 	private List<Seller> listSellers = new ArrayList<>();
 	private List<Stocks> listStocks = new ArrayList<>();
 	private List<Offers> originalOffers = new ArrayList<>();
 	private List<Requests> originalRequests = new ArrayList<>();
+	private List<Requests> listRequests = new ArrayList<>();
 	private List<Thread> thd = new ArrayList<>();
-	// Static Lists
-	public List<Requests> listRequests = new ArrayList<>();
-	private volatile List<Offers> listOffers = new ArrayList<>();
-	private volatile List<Transactions> listTransactions = new ArrayList<>();
-
-	private static Application app = null;
 	// DB
 	static Connection con = null;
-
-	public Application getInstance(){
-		return this;
-	}
-
-	public void updateTransactions(Transactions t) {
-		listTransactions.add(t);
-	}
-
-	public void updateOffers(Offers of, int nr) {
-		listOffers.get(listOffers.indexOf(of)).setNr_actiuni(nr);
-	}
-
-	public List<Offers> getOffers() {
-		return listOffers;
-	}
-
-	public List<Transactions> getTransactions() {
-		return listTransactions;
-	}
 
 	private int getRandomInteger(int minimum, int maximum) {
 		return ((int) (Math.random() * (maximum - minimum))) + minimum;
 	}
 
-	private void initTransactions(List<Transactions> list) throws SQLException {
+	private void initTransactions() throws SQLException {
+
 		Statement stmt = null;
 		stmt = con.createStatement();
 		Statement finalStmt = stmt;
-		list.forEach(t -> {
+		SingletonMarket.getInstance().getListTransactions().forEach(t -> {
 			String insertOffers = "INSERT INTO tranzactii (id_actiune, id_client, id_vanzator, nr_tranzactii) " +
 								  "VALUES (" + t.getId_actiune() + ", " + t.getId_client() + ", " + t.getId_vanzator() + ", " + t.getNr_tranzactii() + ")";
 			try {
@@ -90,7 +63,7 @@ public class Application {
 		Client client = null;
 
 		// standard personal: intre 5 - 10 clienti
-		int nrClient = getRandomInteger(3, 5);
+		int nrClient = getRandomInteger(1, 5);
 
 		for (int c = 1; c <= nrClient; c++) {
 			client = new Client();
@@ -143,7 +116,6 @@ public class Application {
 
 	private void initOffers() throws SQLException {
 		Offers o = null;
-		Offers o1 = null;
 		// nr vanzatori in bd
 		int nrSellers = listSellers.size();
 		// nr actiuni in bd
@@ -158,22 +130,19 @@ public class Application {
 				do {
 					offerStock = getRandomInteger(1, nrStocks); // id ul oferteil
 					o = new Offers(offerStock, seller, actions);
-				} while (listOffers.contains(o)); // 0 pt ca numarul de actiuni
+				} while (originalOffers.contains(o)); // 0 pt ca numarul de actiuni
 				// nu conteaza momentan
 				int nrStocksPerOffer = getRandomInteger(1, 10);// numarul de actiuni
 
 				// eroare de referinta
-				listOffers.add(o); // pe care se fac schimbari
-				o1 = new Offers(offerStock, seller, actions);
-				originalOffers.add(o1);// care ramane neschimbata
+				originalOffers.add(o);
 
 				// add offer to it's seller
 				listSellers.get(seller - 1).addOffer(o);
-				listSellers.get(seller - 1).addOriginalOffer(o1);
 			}
 		}
 
-		for (Offers offer : listOffers) {
+		for (Offers offer : originalOffers) {
 			String insertOffers = "INSERT INTO oferte (id_vanzator, id_actiune, nr_actiuni) VALUES (" + offer.getId_vanzator() + ", " + offer.getId_actiune() + ", " + offer.getNr_actiuni() + ")";
 			Statement stmt = con.createStatement();
 			stmt.executeUpdate(insertOffers);
@@ -208,8 +177,8 @@ public class Application {
 				originalRequests.add(r1);
 
 				// add request to it's client
+
 				listClients.get(client - 1).addRequest(r);
-				listClients.get(client - 1).addOriginalRequest(r1);
 			}
 		}
 
@@ -222,21 +191,29 @@ public class Application {
 
 	public void showOffersDifferences() {
 
-		if (listTransactions.isEmpty()) {
+		if (SingletonMarket.getInstance().getListTransactions().isEmpty()) {
 			System.out.println("No transaction took place...");
 		} else {
 			for (int i = 0; i < originalOffers.size(); i++) {
-				System.out.println("Seller: " + originalOffers.get(i).getId_vanzator() + ", stock: " + originalOffers.get(i).getId_actiune() + "| Original: " + originalOffers.get(i).getNr_actiuni() + " -> Now: " + listOffers.get(i).getNr_actiuni());
+				System.out.println("Seller: "
+								   + originalOffers.get(i).getId_vanzator()
+								   + ", stock: " + originalOffers.get(i).getId_actiune()
+								   + "| Original: " + originalOffers.get(i).getNr_actiuni()
+								   + " -> Now: " + SingletonMarket.getInstance().getListOffers().get(i).getNr_actiuni());
 			}
 		}
 	}
 
 	public void showRequestsDifferences() {
-		if (listTransactions.isEmpty()) {
+		if (SingletonMarket.getInstance().getListTransactions().isEmpty()) {
 			System.out.println("No transaction took place...");
 		} else {
 			for (int i = 0; i < originalRequests.size(); i++) {
-				System.out.println("Client: " + originalRequests.get(i).getId_client() + ", stock: " + originalRequests.get(i).getId_actiune() + "| Original: " + originalRequests.get(i).getNr_actiuni() + " -> Now: " + listRequests.get(i).getNr_actiuni());
+				System.out.println("Client: "
+								   + originalRequests.get(i).getId_client() + ", stock: "
+								   + originalRequests.get(i).getId_actiune() + "| Original: "
+								   + originalRequests.get(i).getNr_actiuni() + " -> Now: "
+								   + SingletonMarket.getInstance().getListRequests().get(i).getNr_actiuni());
 			}
 		}
 	}
@@ -253,7 +230,7 @@ public class Application {
 		System.out.println(listStocks.toString());
 
 		System.out.println("OFERTE:");
-		System.out.println(listOffers.toString());
+		System.out.println(originalOffers.toString());
 
 		System.out.println("CERERI:");
 		System.out.println(listRequests.toString());
@@ -261,12 +238,12 @@ public class Application {
 		_showMenu();
 	}
 
-	public void showTranzactions() {
+	public void showTranzactions() throws SQLException {
 
-		if (listTransactions.isEmpty()) {
+		if (SingletonMarket.getInstance().getListTransactions().isEmpty()) {
 			System.out.println("No transactions took place...");
 		} else {
-			listTransactions.forEach(t -> {
+			SingletonMarket.getInstance().getListTransactions().forEach(t -> {
 				try {
 					System.out.println("Client: " + t.getId_client() +
 									   " purchased: " + t.getNr_tranzactii() +
@@ -326,9 +303,7 @@ public class Application {
 		listClients.clear();
 		listSellers.clear();
 		listStocks.clear();
-		listOffers.clear();
 		listRequests.clear();
-		listTransactions.clear();
 		originalOffers.clear();
 		originalRequests.clear();
 	}
@@ -375,93 +350,33 @@ public class Application {
 		LOG.info("Simulation is ready!");
 	}
 
-	//	public void startSimulation() throws InterruptedException, SQLException, IOException, TimeoutException {
-	//
-	//		LOG.info("Simulation started...");
-	//
-	//		LOG.info("Transactions in process...");
-	//		LOG.info("Sending messages to queue...");
-	//		//
-	//		//		ExecutorService executor = Executors.newWorkStealingPool();
-	//		//		Market market = new Market();
-	//		//
-	//		//		Callable<Void> marketTask = market::startService;
-	//		//		Callable<Void> receiveNewClient = market::receiveNewClient;
-	//		//
-	//		//		List<Future<Void>> sellerFutures = new ArrayList<>();
-	//		//		List<Future<Void>> clientFutures = new ArrayList<>();
-	//		//
-	//		//		for (int i = 0; i < listSellers.size(); i++) {
-	//		//			Future<Void> sellerFuture = executor.submit(marketTask);
-	//		//			sellerFutures.add(sellerFuture);
-	//		//		}
-	//		//
-	//		//		for (int i = 0; i < listClients.size(); i++) {
-	//		//			Future<Void> clientFuture = executor.submit(receiveNewClient);
-	//		//			sellerFutures.add(clientFuture);
-	//		//		}
-	//		//
-	//		//		sellerFutures.forEach(future -> {
-	//		//			try {
-	//		//				future.get();
-	//		//			} catch (InterruptedException | ExecutionException e) {
-	//		//				e.printStackTrace();
-	//		//			}
-	//		//		});
-	//		//
-	//		//		clientFutures.forEach(future -> {
-	//		//			try {
-	//		//				future.get();
-	//		//			} catch (InterruptedException | ExecutionException e) {
-	//		//				e.printStackTrace();
-	//		//			}
-	//		//		});
-	//
-	//		//barber shop problem
-	//		//TODO update DB
-	//
-	//		// insert transactions into DB
-	//		initTransactions(listTransactions);
-	//
-	//		// consume queue
-	//		LOG.info("Getting messages from queue...");
-	//		consumer.consumeMessage(listTransactions.size());
-	//
-	//		LOG.info("Simulation ended...");
-	//		_showMenu();
-	//	}
+	private void consumeMessagesFromQueue() throws IOException, TimeoutException, InterruptedException {
+		Thread.sleep(3000);
+		LOG.info("Getting messages from queue...");
+		Consumer.getInstance().consumeMessage(SingletonMarket.getInstance().getListTransactions().size());
+		Thread.sleep(SingletonMarket.getInstance().getListTransactions().size() * 1000);
+	}
 
-	public void startSimulation() throws InterruptedException, SQLException, IOException, TimeoutException {
+	public void startSimulation() throws InterruptedException, SQLException, IOException, TimeoutException, CloneNotSupportedException {
 
 		LOG.info("Simulation started...");
-
-		ExecutorService executor = Executors.newFixedThreadPool(listClients.size());
-		// make a thread for every client
-		listClients.forEach(client -> {
-			//thd.add(new Thread(client));
-			executor.submit(client);
-		});
+		// set singleton's lists
+		SingletonMarket.getInstance().setListOffers(originalOffers);
 
 		LOG.info("Transactions in process...");
 		LOG.info("Sending messages to queue...");
-
-
-		//
-		//		thd.forEach(thread -> {
-		//			thread.start();
-		//		});
-
-		//TODO update DB
-
-		// insert transactions into DB
-		//		initTransactions(listTransactions);
+		ExecutorService executor = Executors.newFixedThreadPool(listClients.size());
+		// make a thread for every client
+		listClients.forEach(client -> {
+			executor.submit(client);
+		});
 
 		// consume queue
-		LOG.info("Getting messages from queue...");
-		consumer.consumeMessage(listTransactions.size());
+		consumeMessagesFromQueue();
+
+		initTransactions();
 
 		LOG.info("Simulation ended...");
 		_showMenu();
 	}
-
 }

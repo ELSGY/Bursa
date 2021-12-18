@@ -14,12 +14,28 @@ import java.util.concurrent.TimeoutException;
 
 public class Consumer {
 
-	// Logger
+	// singleton instance
+	private static Consumer instance;
 	ConnectionFactory factory = new ConnectionFactory();
 	private static final String QUEUE = "stock-transactions";
 	private final List<String> MESSAGE = new ArrayList<>();
 
-	public synchronized void consumeMessage(int nrMessages) throws IOException, TimeoutException {
+	private Consumer() {
+
+	}
+
+	public static Consumer getInstance() {
+		if (instance == null) {
+			synchronized (Consumer.class) {
+				if (instance == null) {
+					instance = new Consumer();
+				}
+			}
+		}
+		return instance;
+	}
+
+	public void consumeMessage(int nrMessages) throws IOException, TimeoutException {
 
 		try (Connection connection = factory.newConnection()) {
 			Channel channel = connection.createChannel();

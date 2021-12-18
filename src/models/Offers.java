@@ -2,7 +2,7 @@ package models;
 
 import java.util.Objects;
 
-public class Offers {
+public class Offers implements Cloneable {
 
 	private final int id_vanzator;
 	private final int id_actiune;
@@ -35,9 +35,17 @@ public class Offers {
 	}
 
 	@Override
+	public Offers clone() throws CloneNotSupportedException {
+		Offers clone = (Offers) super.clone();
+		return new Offers(this.id_vanzator, this.id_actiune, this.nr_actiuni);
+	}
+
+	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
 		Offers offers = (Offers) o;
 		return id_vanzator == offers.id_vanzator && id_actiune == offers.id_actiune;
 	}

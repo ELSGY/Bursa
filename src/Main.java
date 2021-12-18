@@ -7,7 +7,7 @@ import java.util.concurrent.TimeoutException;
 
 public class Main {
 
-	public static void main(String[] args) throws SQLException, InterruptedException, IOException, TimeoutException {
+	public static void main(String[] args) throws SQLException, InterruptedException, IOException, TimeoutException, CloneNotSupportedException {
 
 		Application app = new Application();
 		app.initDatabase();
