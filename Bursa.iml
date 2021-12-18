@@ -10,5 +10,14 @@
     <orderEntry type="library" exported="" name="sqlite-jdbc-3.20.1" level="project" />
     <orderEntry type="library" exported="" name="amqp-client-5.14.0" level="application" />
     <orderEntry type="library" exported="" name="slf4j-api-1.7.32" level="application" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.18/lombok-1.18.18.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
